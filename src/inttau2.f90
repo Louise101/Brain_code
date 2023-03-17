@@ -3,7 +3,7 @@ module inttau2
    implicit none
 
    private
-   public :: tauint1, tauint_flu, find_taumax, bin_photons
+   public :: tauint1, find_taumax
 
 CONTAINS
 
@@ -57,8 +57,6 @@ CONTAINS
 
                 si_step(celli,cellj,cellk) = si_step(celli, cellj, cellk) + dcell !record path lengths for current step
 
-                !jme(celli,cellj,cellk) = jme(celli, cellj, cellk) + dcell
-
                 call update_pos(xcur, ycur, zcur, celli, cellj, cellk, dcell, .TRUE., dir, delta, tflag, iseed, &
                                 tau, taurun)
             else!moved full distance
@@ -70,24 +68,22 @@ CONTAINS
 
                 si_step(celli,cellj,cellk) = si_step(celli, cellj, cellk) + dcell !record path lengths for current step
 
-                !jme(celli,cellj,cellk) = jme(celli, cellj, cellk) + dcell
-
                 call update_pos(xcur, ycur, zcur, celli, cellj, cellk, dcell, .FALSE., dir, delta, tflag, iseed, &
                                 tau, taurun)
                 exit
             end if
             if(celli == -1 .or. cellj == -1 .or. cellk == -1)then
-                if(celli == -1 .or. cellj == -1)then
-                    call repeat_bounds(celli, cellj, xcur, ycur, xmax, ymax, nxg, nyg, delta)
-                    tflag = .false.
-                    if(celli == -1 .or. cellj == -1 .or. tflag)then
-                       print*,'error',celli,cellj,tflag
-                    end if
-                else
+                !if(celli == -1 .or. cellj == -1)then
+                !    call repeat_bounds(celli, cellj, xcur, ycur, xmax, ymax, nxg, nyg, delta)
+                !    tflag = .false.
+                !    if(celli == -1 .or. cellj == -1 .or. tflag)then
+                !       print*,'error',celli,cellj,tflag
+                !    end if
+                !else
                     tflag = .true.
                     exit
                 end if
-            end if
+          !  end if
         end do
 
         xp = xcur - xmax
@@ -101,127 +97,6 @@ CONTAINS
 
 
 
-    subroutine tauint_flu(xcell,ycell,zcell,tflag,iseed,delta,im_side,z_orig,wgt1,rest,ts)
-    !optical depth integration subroutine
-    !
-    !
-    use constants,   only : xmax, ymax, zmax,nxg,nyg,nzg
-    use photon_vars, only : xp, yp, zp, nyp, nxp, nzp, sint, cosp, leave_theta, leave_phi
-    use iarray,      only : jmean_flu, rhokap, si_step, esc_flur, obs_flur
-    use vector_class
-    use opt_prop, only : n2
-
-    implicit none
-
-    integer, intent(IN) :: z_orig,ts
-    real,    intent(IN)    :: delta, im_side,wgt1
-    integer, intent(INOUT) :: xcell, ycell, zcell, iseed,rest
-    logical, intent(INOUT) :: tflag
-
-
-    real                   :: tau, taurun, taucell, xcur, ycur, zcur, d, dcell, ran2
-    integer                :: celli, cellj, cellk
-    logical                :: dir(3)
-
-    xcur = xp + xmax
-    ycur = yp + ymax
-    zcur = zp + zmax
-
-    celli = xcell
-    cellj = ycell
-    cellk = zcell
-
-    taurun = 0.
-    d = 0.
-    dir = (/.FALSE., .FALSE., .FALSE./)
-
-    !sample optical distance
-    tau = -log(ran2(iseed))
-    do
-       dir = (/.FALSE., .FALSE., .FALSE./)
-       !get distance to nearest wall in direction dir
-       !print*, 'wall',celli
-       dcell = wall_dist(celli, cellj, cellk, xcur, ycur, zcur, dir)
-       !calculate optical distnace to cell wall
-       taucell = dcell * rhokap(celli,cellj,cellk)
-!print*, taurun,taucell,tau,celli
-       if(taurun + taucell < tau)then!still some tau to move
-           taurun = taurun + taucell
-           d = d + dcell
-
-           jmean_flu(celli, cellj, cellk) = jmean_flu(celli, cellj, cellk) + dcell ! record fluence of fluorescence photons
-
-           !si_step(celli,cellj,cellk) = si_step(celli, cellj, cellk) + dcell !record path lengths for current step
-
-           call update_pos(xcur, ycur, zcur, celli, cellj, cellk, dcell, .TRUE., dir, delta, tflag, iseed, &
-                           tau, taurun)
-       else!moved full distance
-
-           dcell = (tau - taurun) / rhokap(celli,cellj,cellk)
-           d = d + dcell
-
-           jmean_flu(celli, cellj, cellk) = jmean_flu(celli, cellj, cellk) + dcell !record fluence from flouresence
-
-           !si_step(celli,cellj,cellk) = si_step(celli, cellj, cellk) + dcell !record path lengths for current step
-
-           call update_pos(xcur, ycur, zcur, celli, cellj, cellk, dcell, .FALSE., dir, delta, tflag, iseed, &
-                           tau, taurun)
-
-           exit
-       end if
-       !print*, celli, cellj, zp, zmax
-       if(celli == -1 .or. cellj == -1 .or. cellk == -1)then
-         !print*, celli, cellj, cellk, zp,zmax
-
-           if(celli == -1 .or. cellj == -1)then
-
-
-               call repeat_bounds(celli, cellj, xcur, ycur, xmax, ymax, nxg, nyg, delta)
-               tflag = .false.
-               if(celli == -1 .or. cellj == -1 .or. tflag)then
-                  print*,'error',celli,cellj,tflag
-               end if
-           else
-            !define final position and direction of photon for binning
-             xp = xcur - xmax
-             yp = ycur - ymax
-             zp = zcur - zmax
-             leave_theta=asin(sint)
-             leave_phi=acos(cosp)
-            ! print*, 'end', xp,yp,zp
-
-             if(zp.gt. zmax)then!.and. n2*sint .lt. 0.22) then !photon has escaped through the top of the grid
-              ! call bin_photons(im_side)
-              obs_flur(ts)=obs_flur(ts)+ 1
-
-            endif
-
-            if(zp.gt. zmax)then
-              esc_flur(z_orig)=esc_flur(z_orig) + 1 !photon binned based on originating z depth
-
-            else
-              rest=rest + 1
-
-             endif
-
-               tflag = .true.
-               exit
-           end if
-       end if
-    end do
-
-    xp = xcur - xmax
-    yp = ycur - ymax
-    zp = zcur - zmax
-    xcell = celli
-    ycell = cellj
-    zcell = cellk
-
-    !print*, xp,yp,zp, nxp,nyp,nzp
-
-
-
-    end subroutine tauint_flu
 
 
     subroutine find_taumax(xcell,ycell,zcell,tau_max,iseed,tflag,dirx,diry,dirz)
@@ -336,60 +211,7 @@ CONTAINS
     end subroutine find_taumax
 
 !************************ bin photons according to position and direction *********************************************
-    subroutine bin_photons(im_side, wgt)
 
-      use photon_vars
-      use constants
-      use iarray, only: flu_image
-
-      implicit none
-
-      real, intent(IN):: im_side,wgt
-
-      real :: xim, yim
-      integer :: xim_int, yim_int
-
-
-    !calculate coornindates on image plane that photon hits
-
-    !xim=im_side + zp*sin(leave_theta) - yp*cos(leave_theta)*sin(leave_phi) - xp*cos(leave_phi)*cos(leave_theta)
-    !yim=im_side + yp*cos(leave_phi) - xp*sin(leave_phi)
-
-    xim=im_side+zp*sin(acos(1.)) - yp*cos(acos(1.))*sin(0.) - xp*cos(0.)*cos(acos(1.)) !angles are chosen observer direction angles
-    yim=im_side+yp*cos(0.) - xp*sin(0.)
-
-    !to sample a specific collection angle, just make collection depend on final angle - leave_theta and leave_theta
-
-    xim_int=int(im_xvox*xim/(2.*im_side))+1
-    yim_int=int(im_yvox*yim/(2.*im_side))+1
-
-!print*, xim_int, yim_int
-
-    if((xim_int .gt. im_xvox) .or. (xim_int .lt. 1)) then
-!      print*, 'xim_int out of bounds'
-      goto 100
-    endif
-
-    if((yim_int .gt. im_yvox) .or. (yim_int .lt. 1)) then
-!      print*, 'yim_int out of bounds'
-      goto 100
-    endif
-
-
-
-
-
-  flu_image(xim_int,yim_int)=flu_image(xim_int,yim_int) + wgt !need to add weighted photons for fluorescence and add the final photon weight instead of 1.
-  !print*, xim_int, yim_int
-
-  !flu_image(100,100)=100.
-
-   100       continue
-
-    !print*, xim, yim
-
-
-    end subroutine bin_photons
 
     subroutine repeat_bounds(cella, cellb, acur, bcur, amax, bmax, nag, nbg, delta)
     !   if photon leaves grid in a direction a or b, then photon is transported to otherside and continues being simulated

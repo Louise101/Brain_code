@@ -7,26 +7,31 @@ MODULE iarray
     real, allocatable :: xface(:), yface(:), zface(:)
     real, allocatable :: rhokap(:,:,:)
     real, allocatable :: albedoar(:,:,:)
-    real, allocatable :: jmean(:,:,:), jmeanGLOBAL(:,:,:), jme(:,:,:), jm_av(:)
-    real, allocatable :: jmean_flu(:,:,:), jmean_fluGLOBAL(:,:,:)
+    real, allocatable :: jmean(:,:,:), jmeanGLOBAL(:,:,:), jme(:,:,:)
     real, allocatable :: refrac(:,:,:)
 
     real, allocatable :: si_step(:,:,:), si_step_GLOBAL(:,:,:)
     !real, allocatable :: si_step_flu(:,:,:), si_step_fluGLOBAL(:,:,:)
-    real, allocatable :: nop_tot(:,:,:), time_tot(:,:,:)
-    real, allocatable :: con_ppix(:,:,:), ua_ppix(:,:,:),con_test(:),con_test_GLOBAL(:)
-    real, allocatable ::  p(:,:,:)
-    integer, allocatable :: np_cell(:,:,:)
+    real, allocatable ::  ua_ppix(:,:,:), ua_brain(:,:,:)
 
-    real, allocatable :: flu_image(:,:)
-    real, allocatable :: esc_flur(:), esc_flur_GLOBAL(:) ! array to bin escaped fluorescence
-    real, allocatable ::alb_absor(:), pl_absor(:), pl_absor_GLOBAL(:) !arrays to compare the absorption vs depth for the albedo absorption and the path length absoption calculators
-    real, allocatable:: phot_tot(:) !array to count total photons leaving the grid
-    real,allocatable:: flu_phot_rel(:)
-    real, allocatable:: flu_lay(:)
-    real,allocatable:: obs_flur(:), obs_flur_GLOBAL(:)
-    real,allocatable:: av_ppix_con_630(:,:) !array of average ppix concentration over each layer for each time step - used in Jaques validation of 420nm where 630nm does the photobleaching
-    real,allocatable:: del_Q(:,:,:), del_pdd(:,:,:),PDD(:,:,:), PDD_GLOBAL(:,:,:)
+    real, allocatable:: percent_left(:), so_tot(:), o23_tot(:), o21_tot(:)
 
-    real,allocatable:: white_matter(:,:,:), grey_matter(:,:,:), tumour(:,:,:)
+    real,allocatable:: white_matter(:,:,:), grey_matter(:,:,:), tumour(:,:,:), tumour_killed(:,:,:), tumour_resec(:,:,:)
+    real,allocatable:: glial_matter(:,:,:), balloon(:,:,:),balloon_killed(:,:,:)
+
+    real,allocatable::rhokap_gbm(:,:,:), albedoar_gbm(:,:,:), hggar(:,:,:)
+
+    real,allocatable:: S_0(:,:,:), O2_3(:,:,:), O2_1(:,:,:)
+
+    real,allocatable:: S0_slice(:,:,:), o23_slice(:,:,:), o21_slice(:,:,:), tumkill_slice(:,:,:), temp_slice(:,:,:)
+
+    real,allocatable:: blob(:,:,:), blob_killed(:,:,:)
+
+    real,allocatable:: temp(:,:,:), E_abs(:,:,:), temp_change(:,:,:)
+
+
+
+
+
+
 end MODULE iarray

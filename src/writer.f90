@@ -17,8 +17,10 @@ implicit none
             integer, intent(IN):: ts
             real, intent(IN):: total_time
 
-!jmeanGLOBAL =jmeanGLOBAL * ((2.*xmax)**2./(nphotons*numproc*((end_time-start_time)+1)*(2.*xmax/nxg) *(2.*ymax/nyg)*(2.*zmax/nzg)))
-jmeanGLOBAL=jmeanGLOBAL*(0.1*(2.*xmax)**2./(nphotons*(ts-1)*numproc*(2.*xmax/nxg)*(2.*ymax/nyg)*(2.*zmax/nzg)))
+
+!jmeanGLOBAL=jmeanGLOBAL*(33/(nphotons*(ts)*numproc*(2.*xmax/nxg)*(2.*ymax/nyg)*(2.*zmax/nzg)))
+jmeanGLOBAL=jmeanGLOBAL*(2000.d0/(nphotons*(ts)*numproc*(2.*xmax/nxg)*(2.*ymax/nyg)*(2.*zmax/nzg))) !power =2W, 2000mW
+!jmeanGLOBAL=jmeanGLOBAL*(30.d0/(nphotons*(ts)*numproc*(2.*xmax/nxg)*(2.*ymax/nyg)*(2.*zmax/nzg))) !power =2W, 2000mW
 
 !print*, 'writer', jmean(100,100,100), jme(100,100,100)
 
@@ -26,8 +28,21 @@ jmeanGLOBAL=jmeanGLOBAL*(0.1*(2.*xmax)**2./(nphotons*(ts-1)*numproc*(2.*xmax/nxg
 
             inquire(iolength=i)jmeanGLOBAL
 
-            open(newunit=u,file=trim(fileplace)//'jmean-test.dat',access='stream',status='REPLACE',form='unformatted')
+            open(newunit=u,file=trim(fileplace)//'jmean_brain_code26.dat',access='stream'&
+            ,status='REPLACE',form='unformatted')
             write(u) jmeanGLOBAL
+            close(u)
+
+            open(newunit=u,file=trim(fileplace)//'rhokap_brain_code26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) rhokap
+            close(u)
+
+            open(newunit=u,file=trim(fileplace)//'albedo_brain_code26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) albedoar
+            close(u)
+
+            open(newunit=u,file=trim(fileplace)//'hgg_brain_code26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) hggar
             close(u)
 
           !  open(newunit=u,file=trim(fileplace)//'jmean/np_cell_full.dat',access='stream',status='REPLACE',form='unformatted')
@@ -42,29 +57,44 @@ jmeanGLOBAL=jmeanGLOBAL*(0.1*(2.*xmax)**2./(nphotons*(ts-1)*numproc*(2.*xmax/nxg
           !  write(u) pl_absor_GLOBAL
           !  close(u)
 
-            open(newunit=u,file=trim(fileplace)//'obs_flur.dat',access='stream',status='REPLACE',form='unformatted')
-            write(u) obs_flur_GLOBAL
+
+            open(newunit=u,file=trim(fileplace)//'percent_left_code26.dat',access='stream',&
+            status='REPLACE',form='unformatted')
+            write(u) percent_left
             close(u)
 
-            open(newunit=u,file=trim(fileplace)//'con_test.dat',access='stream',status='REPLACE',form='unformatted')
-            write(u) con_test
+            open(newunit=u,file=trim(fileplace)//'so_tot_code26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) so_tot
             close(u)
 
-            open(newunit=u,file=trim(fileplace)//'whitematter.dat',access='stream',status='REPLACE',form='unformatted')
-            write(u) white_matter
+            open(newunit=u,file=trim(fileplace)//'o21_tot_code26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) o21_tot
             close(u)
 
-            open(newunit=u,file=trim(fileplace)//'greymatter.dat',access='stream',status='REPLACE',form='unformatted')
-            write(u) grey_matter
+            open(newunit=u,file=trim(fileplace)//'o23_tot_code26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) o23_tot
             close(u)
 
-            open(newunit=u,file=trim(fileplace)//'tumour.dat',access='stream',status='REPLACE',form='unformatted')
-            write(u) tumour
+            open(newunit=u,file=trim(fileplace)//'so_slice26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) S0_slice
             close(u)
 
-            open(newunit=u,file=trim(fileplace)//'rhokap.dat',access='stream',status='REPLACE',form='unformatted')
-            write(u) rhokap
+            open(newunit=u,file=trim(fileplace)//'o23_slice26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) o23_slice
             close(u)
+
+            open(newunit=u,file=trim(fileplace)//'o21_slice26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) o21_slice
+            close(u)
+
+            open(newunit=u,file=trim(fileplace)//'tumkill_slice26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) tumkill_slice
+            close(u)
+
+            open(newunit=u,file=trim(fileplace)//'temp_slice26.dat',access='stream',status='REPLACE',form='unformatted')
+            write(u) temp_slice
+            close(u)
+
 
             !open(newunit=u,file=trim(fileplace)//'av_ppix_con_630.dat',access='stream',status='REPLACE',form='unformatted')
             !write(u) av_ppix_con_630
@@ -78,23 +108,52 @@ jmeanGLOBAL=jmeanGLOBAL*(0.1*(2.*xmax)**2./(nphotons*(ts-1)*numproc*(2.*xmax/nxg
           !  write(u) flu_phot_rel
           !  close(u)
 
-          !if(ts .eq. 60 .or. ts .ge. 120 .and. ts .le. 128 .or. ts .eq. 138 .or. ts .eq. 148)then
-          if(ts .eq. 300 .or. ts .eq. 600 )then
-        !  if(ts .eq. 60 .or. ts .eq. 120 .or. ts .eq. 180 .or. ts .eq. 240 .or. ts .eq. 300 .or. ts .eq. 360 &
-        !  .or. ts .eq. 420 .or. ts .eq. 480 .or. ts .eq. 540 .or. ts .eq. 600 .or. ts .eq. 1200 .or. ts .eq. 1800 &
-        !  .or. ts .eq. 2400 .or. ts .eq. 3000 .or. ts .eq. 3600)then
-          write(fn,fmt='(i0,a)') ts, 'pdd.dat'
+          !if(ts .eq. 1)then
+      !    if(ts .eq.1 .or. ts .eq. 30 .or. ts .eq. 60 .or. ts .eq. 120 .or.&
+      !     ts .eq. 180 .or. ts .eq. 240 .or. ts .eq. 300 &!) then! &
+      !    .or. ts .eq. 420 .or. ts .eq. 480 .or. ts .eq. 540 .or. ts .eq. 558 .or. ts .eq. 600 &!.or. ts .eq. 1200 .or. ts .eq. 1800 &
+      !    .or. ts .eq. 720 .or. ts .eq. 900 .or. ts .eq. 1020 .or. ts .eq. 1200  )then
+      !    .or. ts .eq. 2400 .or. ts .eq. 3000 .or. ts .eq. 3600)then
+      !    write(fn,fmt='(i0,a)') ts, 'so.dat'
+      !   open(newunit=u,file=trim(fileplace)//fn, status="replace", access='stream', form='unformatted')
+      !    write(u) S_0
+      !   close(u)
 
-        !   open it with a fixed unit number
-          open(newunit=u,file=trim(fileplace)//fn, status="replace", access='stream', form='unformatted')
+      !   write(fn,fmt='(i0,a)') ts, 'o23.dat'
+      !  open(newunit=u,file=trim(fileplace)//fn, status="replace", access='stream', form='unformatted')
+      !   write(u) O2_3
+      !  close(u)
 
-          ! write something
-          write(u) PDD_GLOBAL
+      !  write(fn,fmt='(i0,a)') ts, 'o21_code14.dat'
+      ! open(newunit=u,file=trim(fileplace)//fn, status="replace", access='stream', form='unformatted')
+    !    write(u) O2_1
+    !   close(u)
 
-          ! close it
-          close(u)
+    !   write(fn,fmt='(i0,a)') ts, 'o23_code14.dat'
+    !  open(newunit=u,file=trim(fileplace)//fn, status="replace", access='stream', form='unformatted')
+    !   write(u) O2_3
+    !  close(u)
 
-        endif
+    !  write(fn,fmt='(i0,a)') ts, 's0_code14.dat'
+     !open(newunit=u,file=trim(fileplace)//fn, status="replace", access='stream', form='unformatted')
+      !write(u) S_0
+     !close(u)
+
+    !   write(fn,fmt='(i0,a)') ts, 'jmean.dat'
+    !  open(newunit=u,file=trim(fileplace)//fn, status="replace", access='stream', form='unformatted')
+    !   write(u) jmeanGLOBAL
+    !  close(u)
+
+      !write(fn,fmt='(i0,a)') ts, 'tum_kill_code15.dat'
+     !open(newunit=u,file=trim(fileplace)//fn, status="replace", access='stream', form='unformatted')
+    !  write(u) tumour_killed
+      !  write(u) balloon_killed
+     !close(u)
+
+
+
+
+      !  endif
 
             jm = 0.d0
             do k = 1, nzg
@@ -107,7 +166,7 @@ jmeanGLOBAL=jmeanGLOBAL*(0.1*(2.*xmax)**2./(nphotons*(ts-1)*numproc*(2.*xmax/nxg
 
             jm = jm / (nxg*nyg)
 
-            open(newunit=u,file=trim(fileplace)//"validation-630_1.dat",status="replace")
+            open(newunit=u,file=trim(fileplace)//"validation-630.dat",status="replace")
             do i = nzg,1,-1
                 write(u,*)real(nzg-i)*(2./nzg),jm(i)
             end do

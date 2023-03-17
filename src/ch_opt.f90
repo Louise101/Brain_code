@@ -3,140 +3,182 @@ MODULE ch_opt
 implicit none
 
 CONTAINS
-  subroutine init_opt
+
+  subroutine init_opt_630
+    !brain optical properties at 630 nm
 
     use opt_prop
+    use iarray
+    use constants, only : nxg, nyg, nzg
 
     implicit none
 
+    integer :: i,j,k
+
     !633nm
 
+     hgg=0.9
     !white matter
-    whitematter_hgg = 0.96d0
-    whitematter_g2  = whitematter_hgg**2.
-    whitematter_mua = 1.58d0
-    whitematter_mus = 51
+    whitematter_hgg =0.85!0.84d0
+    !g2  = hgg**2.
+    whitematter_mua = 0.63!0.8d0
+    whitematter_mus = 686.d0!409.d0
 
     whitematter_kappa  = whitematter_mus + whitematter_mua
     whitematter_albedo = whitematter_mus / whitematter_kappa
 
     !grey matter
-    greymatter_hgg = 0.88d0
-    greymatter_g2  = greymatter_hgg**2.
-    greymatter_mua = 2.63d0
-    greymatter_mus = 60.2
+    greymatter_hgg =0.85!0.89d0
+    !greymatter_g2  = greymatter_hgg**2.
+    greymatter_mua =0.99!0.2d0
+    greymatter_mus =202.d0! 90.d0
 
     greymatter_kappa  = greymatter_mus + greymatter_mua
     greymatter_albedo = greymatter_mus / greymatter_kappa
 
-    !CSF !660nm - dont have 633nm
+
+
+  !CSF !660nm - dont have 633nm
     csf_hgg = 0.9d0
     csf_g2  = csf_hgg**2.
     csf_mua = 0.04d0
-    csf_mus = 0.35
+    csf_mus = 0.35d0
 
     csf_kappa  = csf_mus + csf_mua
     csf_albedo = csf_mus / csf_kappa
 
     !glial matter !using whtematter properties
-    glial_hgg = 0.96d0
+    glial_hgg =0.85! 0.84d0
     glial_g2  = glial_hgg**2.
-    glial_mua = 1.58d0
-    glial_mus = 51
+    glial_mua = 0.63!0.8d0
+    glial_mus =686.d0! 409.d0
 
     glial_kappa  = glial_mus + glial_mua
     glial_albedo = glial_mus / glial_kappa
 
     !GBM cells
-    gbm_hgg = 0.875d0
-    gbm_g2  = glial_hgg**2.
-    gbm_mua = 0.2d0
-    gbm_mus = 160
+    gbm_hgg = 0.85!0.9d0
+    !gbm_g2  = glial_hgg**2.
+    gbm_mua = 1.3!2.1d0 !0.2
+    gbm_mus = 218!34.9d0/(1.d0 - gbm_hgg)!160
 
     gbm_kappa  = gbm_mus + gbm_mua
     gbm_albedo = gbm_mus / gbm_kappa
 
+    !salt water 630nm
+    hgg_water = 0.9
+    g2_water  = hgg_water**2.
+    mua_water =0.003 !exploring the seafloor - feb 2017 - Garcia et al.
+    mus_water =0.003
+
+    kappa_water  = mus_water + mua_water
+    albedo_water = mus_water / kappa_water
 
 
+    !intralipid fluid
+    hgg_intra = 0.875d0 !dupont parallel mcrt paper 2019
+    g2_intra  = hgg_intra**2.
+    mua_intra =0.001
+    mus_intra =10.
 
-
-
-
-  end subroutine init_opt
-
-   subroutine init_opt1
-!
-!  subroutine to set tissue optical properties 630nm
-!
-   use opt_prop
-   use iarray, only :con_ppix, rhokap, albedoar, ua_ppix
-   use constants, only : nxg, nyg, nzg
-
-   implicit none
-
-   integer:: i,j,k
-
-   hgg = 0.8027
-   g2  = hgg**2.
-   mua = 0.23d0
-   mus = 21.d0/(1.d0 - hgg)
+    kappa_intra  = mus_intra + mua_intra
+    albedo_intra = mus_intra / kappa_intra
 
    e630=0.0265
+    ! calculate new ppix absorbtion coefficent and set new rhokap and albedo for each voxel
+    do i= 1, nxg
+      do j=1,nyg
+        do k=1,nzg
 
-   kappa  = mus + mua
-   albedo = mus / kappa
+          ua_ppix(i,j,k)=e630 * S_0(i,j,k)*tumour_resec(i,j,k) !ensures PpIX only present in tumour cells
 
-   ! calculate new ppix absorbtion coefficent and set new rhokap and albedo for each voxel
-   do i= 1, nxg
-     do j=1,nyg
-       do k=1,nzg
 
-         ua_ppix(i,j,k)=e630 * con_ppix(i,j,k)
+          rhokap_gbm(i,j,k)=gbm_kappa + ua_ppix(i,j,k)
+          albedoar_gbm(i,j,k)= gbm_mus / rhokap_gbm(i,j,k)
 
-         rhokap(i,j,k)=mus + mua + ua_ppix(i,j,k)
-         albedoar(i,j,k)= mus / rhokap(i,j,k)
+         end do
+       end do
+     end do
 
-        end do
-      end do
-    end do
-   end subroutine init_opt1
 
-   subroutine init_opt2
-!
-!  subroutine to set tissue optical properties 420nm
-!
-   use opt_prop
-   use iarray, only :con_ppix, rhokap, albedoar, ua_ppix
-   use constants, only : nxg, nyg, nzg
+  end subroutine init_opt_630
 
-   implicit none
+  subroutine opt_jacques
+! 630 nm
+  use opt_prop
+  use iarray, only :S_0, rhokap, albedoar, ua_ppix
+  use constants, only : nxg, nyg, nzg
 
-   integer :: i,j,k
+  implicit none
 
-   hgg = 0.9
-   g2  = hgg**2.
-   mua = 1.8d0
-   mus = 82.d0/(1.d0 - hgg)
+  integer:: i,j,k
 
-   e420=0.105
+  hgg = 0.9 !caclulated from paper using eq in fig 3 and tumour properties
+  g2  = hgg**2.
 
-   !kappa  = mus + mua
-   !albedo = mus / kappa
 
-   ! calculate new ppix absorbtion coefficent and set new rhokap and albedo for each voxel
-   do i= 1, nxg
-     do j=1,nyg
-       do k=1,nzg
+  mua = 0.23
+  mus = 21.d0/(1.d0 - hgg)
 
-         ua_ppix(i,j,k)=e420 * con_ppix(i,j,k)
-         rhokap(i,j,k)=mus + mua + ua_ppix(i,j,k)
-         albedoar(i,j,k)= mus / rhokap(i,j,k)
+  kappa  = mus + mua
+  albedo = mus/ kappa
 
-        end do
-      end do
-    end do
+  do i= 1, nxg
+    do j=1,nyg
+      do k=1,nzg
 
-   end subroutine init_opt2
+        ua_ppix(i,j,k)=e630 * S_0(i,j,k)
+
+        rhokap(i,j,k)=mus + mua + ua_ppix(i,j,k)
+        albedoar(i,j,k)= mus / rhokap(i,j,k)
+
+       end do
+     end do
+   end do
+
+
+
+end subroutine opt_jacques
+
+subroutine opt_wang_m3
+! 630 nm
+use opt_prop
+use iarray, only :S_0, rhokap, albedoar, ua_ppix
+use constants, only : nxg, nyg, nzg
+
+implicit none
+
+integer:: i,j,k
+
+hgg = 0.9 !caclulated from paper using eq in fig 3 and tumour properties
+g2  = hgg**2.
+
+
+mua = 1.51
+mus = 12.29/(1.d0 - hgg)
+
+kappa  = mus + mua
+albedo = mus/ kappa
+
+do i= 1, nxg
+  do j=1,nyg
+    do k=1,nzg
+
+      ua_ppix(i,j,k)=e630 * S_0(i,j,k)
+
+      rhokap(i,j,k)=mus + mua + ua_ppix(i,j,k)
+      albedoar(i,j,k)= mus / rhokap(i,j,k)
+
+     end do
+   end do
+ end do
+
+
+
+end subroutine opt_wang_m3
+
+
+
 
    subroutine init_opt3
 !
